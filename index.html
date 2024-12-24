@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Initials Preview Tool</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      .upload-container {
+        width: 100%;
+        max-width: 500px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        background-color: #f9f9f9;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      input[type="file"] {
+        margin-bottom: 10px;
+      }
+      img {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+      }
+      .controls {
+        margin-top: 10px;
+        display: none;
+      }
+      .floating-initials {
+        margin: 0 !important;
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: flex;
+      }
+
+      .dot{
+        height: 46px;
+        aspect-ratio: 1 / 8;
+        object-fit: cover;
+        transform: translateY(15%);
+      }
+
+      .image-container {
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="upload-container">
+      <form>
+        <label for="fileUpload">Upload your image:</label>
+        <input
+          type="file"
+          id="fileUpload"
+          name="fileUpload"
+          accept="image/*"
+          onchange="previewImage();"
+        />
+        <div class="image-container position-relative" style="display: none">
+          <img id="imagePreview" src="" alt="Image Preview" />
+          <div class="floating-initials"></div>
+        </div>
+      </form>
+
+      <form class="controls">
+        <div class="mb-2">
+          <select class="form-select" name="color" id="initial-color">
+            <option value="silver">Silver</option>
+            <option value="gold">Gold</option>
+            <option value="red">Red</option>
+          </select>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col">
+            <div class="form-floating">
+              <input
+                type="text"
+                class="form-control"
+                name="letters"
+                id="initial-letters"
+                placeholder="Test Initial Letters"
+              />
+              <label for="initial-letters">Initial Letters</label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-floating">
+              <input
+                type="number"
+                min="0"
+                class="form-control"
+                id="initials-fs"
+                name="fs"
+                placeholder="Font Size"
+              />
+              <label for="initials-fs">Font Size</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2">
+          <div class="col">
+            <div class="form-floating">
+              <input
+                type="number"
+                min="0"
+                class="form-control"
+                id="initials-x"
+                name="x"
+              />
+              <label for="initials-x">X Position</label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-floating">
+              <input
+                type="number"
+                min="0"
+                class="form-control"
+                id="initials-y"
+                name="y"
+              />
+              <label for="initials-y">Y Position</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 col-6 mx-auto mt-3">
+          <button class="btn btn-primary" type="button">Apply</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function previewImage() {
+        const file = document.getElementById("fileUpload").files[0];
+        const reader = new FileReader();
+
+        reader.addEventListener(
+          "load",
+          function () {
+            // Convert image file to base64 string and display it
+            const imagePreview = document.getElementById("imagePreview");
+            imagePreview.src = reader.result;
+
+            document.querySelector(".image-container").style.display = "block";
+            document.querySelector(".controls").style.display = "block";
+          },
+          false
+        );
+
+        if (file) {
+          reader.readAsDataURL(file);
+        }
+      }
+
+      const _form = document.querySelector(".controls");
+      const _inputs = _form.querySelectorAll("input, select");
+
+      _inputs.forEach((input) => {
+        input.addEventListener("change", function (event) {
+          applyControls();
+        });
+      });
+
+      function isAlphabet(str) {
+        return /^[A-Za-z]+$/.test(str);
+      }
+
+      function getLetters(str){
+        let letters = [];
+        for(let i = 0; i < (str.length-1); i++){
+          if(isAlphabet(str[i])){
+            letters.push(str[i]);
+            letters.push("dot");
+          }
+        }
+        if(isAlphabet(str[str.length-1]))
+          letters.push(str[str.length-1]);
+
+        return letters;
+      }
+
+      function applyControls() {
+        const form = document.querySelector(".controls");
+        const formData = new FormData(form);
+        const theData = {};
+        for (const [key, value] of formData.entries()) {
+          theData[key] = value;
+        }
+
+        const selectedLetters = getLetters(theData.letters);
+
+        let ele = document.querySelector(".floating-initials");
+        ele.innerHTML = "";
+        
+        selectedLetters.forEach((letter) => {
+          if(letter == "dot")
+          ele.innerHTML += `<img class='dot' src='/Initials/${theData.color.toLowerCase()}_${letter.toLowerCase()}.png'>`;
+          else
+            ele.innerHTML += `<img class='initial' src='/Initials/${theData.color.toLowerCase()}_${letter.toLowerCase()}.png'>`;
+        });
+
+        ele.style.top = `${theData.y}%`;
+        ele.style.right = `${theData.x}%`;
+
+        let container = document.querySelector(".image-container");
+        var percentage = parseFloat(theData.fs);
+        var fontSize = container.offsetWidth * (percentage / 100);
+
+        const initials = ele.childNodes;
+
+        initials.forEach((element) => {
+          element.style.height = `${fontSize}px`;
+        });
+      }
+
+      function resetControls() {
+        document.querySelector(".floating-initials").innerHTML = "";
+        const _form = document.querySelector(".controls");
+        const _inputs = _form.querySelectorAll("input");
+        document.getElementById("initial-color").value = 'black';
+        _inputs.forEach((input) => {
+          input.value = "";
+        });
+        applyControls();
+      }
+
+      window.addEventListener("resize", applyControls);
+    </script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
